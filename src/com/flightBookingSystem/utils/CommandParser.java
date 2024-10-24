@@ -2,17 +2,22 @@ package com.flightBookingSystem.utils;
 
 import java.util.Map;
 
-import com.flightBookingSystem.interfaces.IAirline;
-import com.flightBookingSystem.services.FlightSearchService;
+import com.flightBookingSystem.constants.constants;
+import com.flightBookingSystem.dao.FlightDAO;
+import com.flightBookingSystem.entities.Airline;
+import com.flightBookingSystem.services.airlineManagerServiceImpl;
+import com.flightBookingSystem.services.flightSearchServiceImpl;
+import com.flightBookingSystem.strategy.CheapestFlightSearchStrategy;
+import com.flightBookingSystem.strategy.MinHopsFlightSearchStrategy;
 
 public class CommandParser {
-    private Map<String, IAirline> airlines;
-    private FlightSearchService flightSearchService;
-    private InputValidator inputValidator;
-    public CommandParser(Map<String, IAirline> airlines, FlightSearchService flightSearchService,InputValidator inputValidator) {
+    private Map<String, Airline> airlines;
+    private flightSearchServiceImpl flightSearchService;
+    private airlineManagerServiceImpl airlineManager;
+    public CommandParser(Map<String, Airline> airlines, flightSearchServiceImpl flightSearchService,airlineManagerServiceImpl airlineManager) {
         this.airlines = airlines;
         this.flightSearchService = flightSearchService;
-        this.inputValidator = inputValidator;
+        this.airlineManager=airlineManager;
     }
 
     public void parseCommand(String input) {
@@ -40,22 +45,22 @@ public class CommandParser {
         String source = parts[2].trim();
         String destination = parts[3].trim();
         double cost;
-        if (inputValidator.isValidAirlineName(airlineName)) {
+        if (InputValidator.isValidAirlineName(airlineName)) {
             System.out.println("Invalid airline name. Airline names must have no spaces and be at least 3 characters long.");
             return;
         }
-        if (!inputValidator.isValidCityCode(source)) {
+        if (!InputValidator.isValidCityCode(source)) {
             System.out.println("Invalid source city code. Must be a 3-letter code.");
             return;
         }
-        if (!inputValidator.isValidCityCode(destination)) {
+        if (!InputValidator.isValidCityCode(destination)) {
             System.out.println("Invalid destination city code. Must be a 3-letter code.");
             return;
         }
 
         try {
             cost = Double.parseDouble(parts[4].trim());
-            if (inputValidator.isValidCost(cost)) {
+            if (InputValidator.isValidCost(cost)) {
                 System.out.println("Invalid cost value. Cost must be a positive number greater than 0.");
                 return;
             }
@@ -64,14 +69,14 @@ public class CommandParser {
             return;
         }
 
-        IAirline airline = airlines.get(airlineName);
+        Airline airline = airlines.get(airlineName);
         if (airline == null) {
             System.out.println("Airline " + airlineName + " not found.");
             return;
         }
 
-        boolean servesMeals = airlineName.equalsIgnoreCase("Indigo"); // Assuming Indigo serves meals
-        airline.registerFlight(source, destination, cost, servesMeals);
+        boolean servesMeals = airlineName.equalsIgnoreCase(constants.MEAL_SERVING_AIRLINE);
+        airlineManager.registerFlight(airline, source, destination, cost, servesMeals);
     }
 
     private void parseSearchFlight(String input) {
@@ -82,14 +87,18 @@ public class CommandParser {
             return;
         }
 
-        String source = parts[1];
-        String destination = parts[2];
+        String source = parts[1].trim();
+        String destination = parts[2].trim();
         boolean requiresMeals = false;
 
         if (parts.length == 4) {
-            requiresMeals = Boolean.parseBoolean(parts[3]);
+            requiresMeals = Boolean.parseBoolean(parts[3].trim());
         }
-
+        flightSearchService.setSearchStrategy(new MinHopsFlightSearchStrategy(FlightDAO.getInstance()));
+        System.out.println("Route with minimum hops:");
+        flightSearchService.searchFlights(source, destination, requiresMeals);
+        flightSearchService.setSearchStrategy(new CheapestFlightSearchStrategy(FlightDAO.getInstance()));
+        System.out.println("\nCheapest Route:");
         flightSearchService.searchFlights(source, destination, requiresMeals);
     }
 }

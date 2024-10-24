@@ -1,49 +1,38 @@
 package com.flightBookingSystem.entities;
-
-import com.flightBookingSystem.interfaces.IFlight;
-
-
-public class Flight implements IFlight {
+public class Flight {
     private String source;
     private String destination;
     private String airlineName;
     private double cost;
     private boolean servesMeals;
-
-    public Flight(String source, String destination, String airlineName, double cost, boolean servesMeals) {
+    public void setSource(String source){
         this.source = source;
+    }
+    public void setDestination(String destination){
         this.destination = destination;
+    }
+    public void setAirlineName(String airlineName){
         this.airlineName = airlineName;
+    }
+    public void setCost(double cost){
         this.cost = cost;
+    }
+    public void setServeMeals(boolean servesMeals){
         this.servesMeals = servesMeals;
     }
-
-    @Override
     public String getSource() {
         return source;
     }
-
-    @Override
     public String getDestination() {
         return destination;
     }
-
-    @Override
     public String getAirlineName() {
         return airlineName;
     }
-
-    @Override
     public double getCost() {
         return cost;
     }
-
-    @Override
     public boolean servesMeals() {
         return servesMeals;
-    }
-
-    public Double getPrice() {
-        return cost;
     }
 }
